@@ -2,11 +2,12 @@
 using IniParser;
 using IniParser.Model;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.SQLite;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -42,6 +43,10 @@ namespace Gestione_Studio.Pagine
         BackgroundWorker bgw3 = new BackgroundWorker();
         string percorso = "";
         string percorso2 = "";
+       
+        string user = "";
+        string password = "";
+        string dbname = "";
 
         public Impostazioni()
         {
@@ -78,7 +83,9 @@ namespace Gestione_Studio.Pagine
             var parser = new FileIniDataParser();
             IniData data = parser.ReadFile(path + "\\" + "Config.ini");
             percorso = data["Generale"]["Percorso"];
-
+            user = data["Generale"]["User"];
+            password = data["Generale"]["Password"];
+            dbname = data["Generale"]["DatabaseName"];
 
 
         }
@@ -95,10 +102,10 @@ namespace Gestione_Studio.Pagine
 
                 dt.Columns.Add("gruppi");
                 percorso = percorso.Replace(@"\\", @"\\\");
-                string ConString = "Data Source=" + percorso + ";Version=3;";
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 command.CommandText = "SELECT * FROM gruppi";
                 connection.Open();
                 Reader = command.ExecuteReader();
@@ -146,13 +153,13 @@ namespace Gestione_Studio.Pagine
                  //   drv.Row.Delete();
                     string path = Directory.GetCurrentDirectory();
                     percorso = percorso.Replace(@"\\", @"\\\");
-                    SQLiteConnection cancella = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+                    MySqlConnection cancella = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
                     cancella.Open();
                     string sql = "delete from gruppi where gruppi='" + gruppo + "'";
 
 
 
-                    SQLiteCommand command = new SQLiteCommand(sql, cancella);
+                    MySqlCommand command = new MySqlCommand(sql, cancella);
                     command.ExecuteNonQuery();
                     cancella.Close();
 
@@ -193,13 +200,13 @@ namespace Gestione_Studio.Pagine
                     //   drv.Row.Delete();
                     string path = Directory.GetCurrentDirectory();
                     percorso = percorso.Replace(@"\\", @"\\\");
-                    SQLiteConnection cancella = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+                    MySqlConnection cancella = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
                     cancella.Open();
                     string sql = "delete from utente where nome='" + utente + "'";
 
 
 
-                    SQLiteCommand command = new SQLiteCommand(sql, cancella);
+                    MySqlCommand command = new MySqlCommand(sql, cancella);
                     command.ExecuteNonQuery();
                     cancella.Close();
 
@@ -224,10 +231,10 @@ namespace Gestione_Studio.Pagine
                 string path = Directory.GetCurrentDirectory();
                 Console.WriteLine(path);
                 percorso = percorso.Replace(@"\\", @"\\\");
-                string ConString = "Data Source=" + percorso + ";Version=3;";
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 command.CommandText = "SELECT * FROM utente";
                 connection.Open();
                 Reader = command.ExecuteReader();
@@ -375,21 +382,53 @@ namespace Gestione_Studio.Pagine
         {
             try
             {
-                var dialog = new CommonOpenFileDialog();
-                dialog.IsFolderPicker = true;
-               
-                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
-                {
-                    Console.WriteLine(dialog.FileName.ToString());
-                    string s = DateTime.Now.ToString("dd-MM-yy_HHmmss", new CultureInfo("it-IT"));
-                    File.Copy(percorso, dialog.FileName.ToString() + "\\backup_gestione_studio_" + s + ".dat");
-                }
+                string path = Directory.GetCurrentDirectory();
+
+                Process process = new Process();
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = "/K" + "\"" + path + "\\" + "mysqldump.exe" + "\"" + " --host " + percorso + " -P 3306 --u " + user + " -p" + password + " negozio > negoziobk.sql" + " & exit";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                //* Set ONLY ONE handler here.
+                process.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
+                //* Start process
+                process.Start();
+                //* Read one element asynchronously
+                process.BeginErrorReadLine();
+                //* Read the other one synchronously
+                string output = process.StandardOutput.ReadToEnd();
+              //  Console.WriteLine(output);
+                process.WaitForExit();
+
+                
+
             }
             catch
             {
                 MessageBox.Show("Backup non eseguito! Riprovare");
 
             }
+
+
+
+        }
+
+        static void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            //* Do your stuff with the output (write to console/log/StringBuilder)
+            if (outLine.Data != null)
+            {
+                MessageBox.Show(outLine.Data);
+            }
+
+            else
+            {
+
+               
+
+            }
+           // Console.WriteLine(outLine.Data);
         }
 
         private void ripristina_database_Click(object sender, RoutedEventArgs e)
@@ -424,13 +463,13 @@ namespace Gestione_Studio.Pagine
 
         private void azzera(string tabella)
         {
-            SQLiteConnection cancella = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+            MySqlConnection cancella = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
             cancella.Open();
             string sql = "DELETE FROM " + tabella + " WHERE id > -1";
 
 
 
-            SQLiteCommand command = new SQLiteCommand(sql, cancella);
+            MySqlCommand command = new MySqlCommand(sql, cancella);
             command.ExecuteNonQuery();
 
 
@@ -492,11 +531,11 @@ namespace Gestione_Studio.Pagine
                 dt.Columns.Add("Dicembre", typeof(decimal), null);
                 dt.Columns.Add("TOTALE", typeof(decimal), null);
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";"; ;
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 command.CommandText = "select gruppo,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'GENNAIO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Gennaio,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'FEBBRAIO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Febbraio,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'MARZO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Marzo,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'APRILE' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Aprile,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'MAGGIO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Maggio,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'GIUGNO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Giugno,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'LUGLIO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Luglio,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'AGOSTO' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Agosto,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'SETTEMBRE' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Settembre,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'OTTOBRE' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Ottobre,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'NOVEMBRE' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Novembre,  REPLACE(sum(CAST(REPLACE(case when[mese] = 'DICEMBRE' then importo else 0 end, ',', '.')AS REAL)), '.', ',') Dicembre from quadernino group by gruppo;";
 
                 connection.Open();
@@ -644,14 +683,14 @@ namespace Gestione_Studio.Pagine
                 dt.Columns.Add("utente");
 
                 
-                    string ConString = "Data Source=" + percorso + ";Version=3;";
+                    string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";"; ;
 
 
 
 
-                    SQLiteConnection connection = new SQLiteConnection(ConString);
-                    SQLiteCommand command = connection.CreateCommand();
-                    SQLiteDataReader Reader;
+                    MySqlConnection connection = new MySqlConnection(ConString);
+                    MySqlCommand command = connection.CreateCommand();
+                    MySqlDataReader Reader;
 
                     command.CommandText = "SELECT * FROM quadernino where mese='"+mese_scelto + "'";
 
@@ -752,11 +791,11 @@ wbook.SaveAs(percorso2 + "\\" + "Quadernino.xlsx");
               //  dt.Columns.Add("banca");
                 dt.Columns.Add("utente");
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";"; 
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 
 
                     command.CommandText = "SELECT * FROM quadernino WHERE  gruppo='POSTA'";
@@ -844,11 +883,11 @@ wbook.SaveAs(percorso2 + "\\" + "Quadernino.xlsx");
 
                 ds.Columns.Add("utente");
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
 
                 
                     command.CommandText = "SELECT * FROM fondoposta WHERE  gruppo='FONDO CASSA POSTA'";
@@ -942,11 +981,11 @@ wbook.SaveAs(percorso2 + "\\" + "Quadernino.xlsx");
                // dt.Columns.Add("banca");
                 dt.Columns.Add("utente");
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";"; ;
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 
 
                     command.CommandText = "SELECT * FROM quadernino WHERE  gruppo='GESTIONE DIRITTI'";
@@ -1034,11 +1073,11 @@ wbook.SaveAs(percorso2 + "\\" + "Quadernino.xlsx");
 
                 ds.Columns.Add("utente");
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
 
                
                     command.CommandText = "SELECT * FROM fondocat WHERE  gruppo='USCITA CAT'";

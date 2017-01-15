@@ -173,7 +173,16 @@
                 
             </StackPanel>
         <StatusBar  HorizontalAlignment="Right" Margin="0,30,60,20" Background="{DynamicResource MaterialDesignPaper}" DockPanel.Dock="Bottom"   >
-           
+
+            <Border BorderThickness="1" BorderBrush="Gainsboro">
+                <StackPanel Orientation="Vertical" Margin="10,0,0,0"  >
+                    <Label Content="SOSPESI" HorizontalContentAlignment="Center" FontWeight="Bold"></Label>
+                    <Label x:Name="sospesi_txt" Width="150"  Margin="10,0,20,0" FontSize="12" Foreground="Green" HorizontalContentAlignment="Center"/>
+                    
+
+                </StackPanel>
+            </Border>
+
             <Border BorderThickness="1" BorderBrush="Gainsboro">
             <StackPanel Orientation="Vertical" Margin="10,0,0,0"  >
                  <Label Content="CONTANTI + POS + BONIFICI" HorizontalContentAlignment="Center" FontWeight="Bold"></Label>

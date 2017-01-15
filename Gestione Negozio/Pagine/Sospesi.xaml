@@ -1,4 +1,4 @@
-﻿<Page x:Class="Gestione_Studio.Pagine.Cassa_Fiscale"
+﻿<Page x:Class="Gestione_Studio.Pagine.Sospesi"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,7 +14,7 @@
         Background="{DynamicResource MaterialDesignPaper}"
         FontFamily="{DynamicResource MaterialDesignFont}"
       Height="auto" Width="auto" 
-      Title="Cat">
+      Title="Sospesi">
     <Page.Resources>
 
         <Style x:Key="Flat_Button" TargetType="{x:Type Button}">
@@ -159,12 +159,9 @@
                         <ComboBoxItem Content="ANNO"/>
                     </ComboBox>
 
-                    <Label Content="Fiscali: "  Margin="10,0,0,0" FontSize="20"/>
+                    <Label Content="Totale sospesi: "  Margin="10,0,0,0" FontSize="20"/>
                     <Label x:Name="in_total"  Margin="10,0,20,0" FontSize="20" Foreground="Green"/>
-                    <Label Content="Fondi: "  Margin="10,0,0,0" FontSize="20"/>
-                    <Label x:Name="out_total"  Margin="10,0,0,0" FontSize="20" Foreground="Red"/>
-                    <Label Content="Residuo: "  Margin="10,0,0,0" FontSize="20"/>
-                    <Label x:Name="total"  Margin="20,0,20,0" FontSize="20" FontWeight="Bold"/>
+                    
 
 
                 </StackPanel>
@@ -181,7 +178,7 @@
 
                     <DataGridTextColumn Binding="{Binding data}" Header="Data" />
                     <DataGridTextColumn Binding="{Binding mese}" Header="Mese" />
-                    <DataGridTextColumn Binding="{Binding gruppo}"    Header="Gruppo" />
+                    
                     <DataGridTemplateColumn Header="Descrizione" Width="SizeToCells" >
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -198,7 +195,7 @@
 
 
                     <DataGridTextColumn Binding="{Binding importo, ConverterCulture=it-IT, StringFormat={}{0:€ #,#.##;€ -#,#.##;-}}" Header="Importo" />
-                    <DataGridTextColumn Binding="{Binding tipo_mov}" Header="Movimento" />
+                    
                     <DataGridTextColumn Binding="{Binding utente}" Header="Utente" />
                 </DataGrid.Columns>
             </DataGrid>

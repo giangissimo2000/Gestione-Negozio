@@ -1,9 +1,10 @@
 ﻿using IniParser;
 using IniParser.Model;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -24,15 +25,19 @@ namespace Gestione_Studio
     /// <summary>
     /// Interaction logic for Aggiungi.xaml
     /// </summary>
-    public partial class FondoCassaCat : Window
+    public partial class Aggiungi_Sospeso : Window
     {
         string percorso = "";
-        public FondoCassaCat()
+        string user = "";
+        string password = "";
+        string dbname = "";
+        public Aggiungi_Sospeso()
         {
             InitializeComponent();
             Verifica_Database();
+           
             Read_Utenti();
-
+            
         }
 
         private void Verifica_Database()
@@ -43,6 +48,9 @@ namespace Gestione_Studio
                 var parser = new FileIniDataParser();
                 IniData data = parser.ReadFile(path + "\\" + "Config.ini");
                 percorso = data["Generale"]["Percorso"];
+                user = data["Generale"]["User"];
+                password = data["Generale"]["Password"];
+                dbname = data["Generale"]["DatabaseName"];
             }
             catch
             {
@@ -52,24 +60,10 @@ namespace Gestione_Studio
             }
 
 
-            try
-            {
-                if (File.Exists(percorso))
-                {
-                    percorso = percorso.Replace(@"\\", @"\\\");
-                }
-                else
-                {
-                    MessageBox.Show("Impossibile trovare il Database!");
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Impossibile trovare il Database!");
-
-            }
+            
 
         }
+        
 
         private void Read_Utenti()
         {
@@ -79,11 +73,11 @@ namespace Gestione_Studio
 
                 dt.Columns.Add("utente");
                 string path = Directory.GetCurrentDirectory();
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
 
 
 
@@ -123,7 +117,7 @@ namespace Gestione_Studio
 
         private void importo_block_KeyDown(object sender, KeyEventArgs e)
         {
-
+           
         }
 
         private bool IsNumberKey(Key inKey)
@@ -140,7 +134,7 @@ namespace Gestione_Studio
 
         private bool IsActionKey(Key inKey)
         {
-            return inKey == Key.Delete || inKey == Key.Back || inKey == Key.Return || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
+            return inKey == Key.Delete || inKey == Key.Back ||  inKey == Key.Return || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
 
 
         }
@@ -155,70 +149,82 @@ namespace Gestione_Studio
         {
             if (utenti_combo.Text != "")
             {
-                if (descrizione_block.Text != "")
-                {
-                    if (importo_block.Text == "")
-
+                
+                    if (descrizione_block.Text != "")
                     {
-                        MessageBox.Show("Inserire importo!");
-                    }
-                    else
-                    {
-                        string number = importo_block.Text;
-                        decimal number_;
-                        if (!Decimal.TryParse(number, out number_))
+                        if (importo_block.Text != "")
+
                         {
-                            MessageBox.Show("Importo non corretto!");
-                        }
 
-                        else
-                        {
-                            string data = DateTime.Now.ToString("yyyy/MM/dd");
-                            string movimento = "";
-                            string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
-                            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s.ToUpper());
-                            string descrizione = descrizione_block.Text;
-                            string utente = utenti_combo.Text;
-                            string importo = importo_block.Text;
-                          //  decimal number1_;
-                           /* if (Decimal.TryParse(importo, out number1_))
-                            {
-                                if (number1_ > 0) { movimento = "ENTRATA"; } else { movimento = "USCITA"; }
+                            
 
-                            }*/
-                            movimento = "USCITA";
-                            aggiungi_fondo(data, mese, descrizione, importo, movimento, utente);
-                            Application.Current.Properties["PassGate"] = mese;
-                            this.Close();
+                                string number = importo_block.Text;
+                                decimal number_;
+                                if (!Decimal.TryParse(number, out number_))
+                                {
+                                    MessageBox.Show("Importo non coretto!");
+                                }
+
+                                else
+                                {
+                                    string data = DateTime.Now.ToString("yyyy/MM/dd");
+
+
+
+                                   
+                                    string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
+                                    string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s.ToUpper());
+                                    string descrizione = descrizione_block.Text;
+                                   
+                                    string utente = utenti_combo.Text;
+                                    string importo = importo_block.Text;
+                                    decimal number1_;
+                                    
+
+
+                                    
+
+
+
+                                    aggiungi_voce(data, mese, descrizione, importo, utente);
+                                    Application.Current.Properties["PassGate"] = mese;
+                                    //var myObject = this.Owner as MainWindow;
+
+                                    //   myObject.Read_Database(mese);
+                                    //   myObject.totale();
+                                    this.Close();
+                                }
+
+
+                            
+
                         }
+                        else MessageBox.Show("Digitare Importo!!");
                     }
+                    else MessageBox.Show("Digitare Descrizione!");
+                
 
-                }
-                else MessageBox.Show("Inserire descrizione!");
+                
             }
-            else MessageBox.Show("Selezionare operatore!");
+            else MessageBox.Show("Selezionare utente!");
         }
 
 
-
-
-
-
-        private void aggiungi_fondo(string data, string mese, string descrizione, string importo, string movimento, string utente)
+        private void aggiungi_voce(string data, string mese,string descrizione,string importo, string utente)
         {
             try
             {
                 string path = Directory.GetCurrentDirectory();
-                string gruppo = "USCITA CAT";
-                SQLiteConnection aggiungi = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+
+                MySqlConnection aggiungi = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
                 aggiungi.Open();
                 descrizione = descrizione.Replace("'", "''");
-                string sql = "insert into fondocat(data,mese,gruppo,descrizione,importo,tipo_mov,utente) values ('" + data + "','" + mese + "','" + gruppo + "','" + descrizione + "','" + importo + "','" + movimento + "','"  + utente + "')";
+                string sql = "insert into sospesi(data,mese,descrizione,importo,utente) values ('" + data + "','" + mese + "','"  + descrizione + "','" + importo + "','"  + utente + "')";
                 // string sqlh = "update Prodotti set Giacenza ='" + quantitanew + "'  where Codice ='" + codice + "'";
                 //insert into Prodotti (CodiceAAMS,Prezzo_pacchetto,Tipologia) values ( '" + CodiceAAMS + "','" + Prezzo_pacc + "','" + Tipologia + "')";//
 
 
-                SQLiteCommand command = new SQLiteCommand(sql, aggiungi);
+                MySqlCommand command = new MySqlCommand(sql, aggiungi);
                 command.ExecuteNonQuery();
                 aggiungi.Close();
 
@@ -229,16 +235,13 @@ namespace Gestione_Studio
 
         private void Esci_Click(object sender, RoutedEventArgs e)
         {
-            string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
-            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s);
-            Application.Current.Properties["PassGate"] = mese;
             this.Close();
         }
     }
 
+
+
 }
-
-
 
 
 

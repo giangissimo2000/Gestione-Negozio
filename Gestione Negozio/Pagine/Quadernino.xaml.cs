@@ -41,6 +41,7 @@ namespace Gestione_Studio.Pagine
             string s = new CultureInfo("it-IT").TextInfo.ToTitleCase(month.ToUpper());
             comboBox.SelectedValue = s;
             Read_Database(s);
+            Read_Sospesi(s);
           //  ShowHideMenu("sbHideLeftMenu", btnLeftMenuHide, btnLeftMenuShow, pnlLeftMenu);
             totale();
         }
@@ -68,6 +69,92 @@ namespace Gestione_Studio.Pagine
             
 
         }
+
+        public void Read_Sospesi(string nomemese)
+        {
+            int num_sospesi = 0;
+            try
+            {
+                string path = Directory.GetCurrentDirectory();
+                Console.WriteLine(path);
+                DataTable dt = new DataTable();
+
+                dt.Columns.Add("data");
+
+                dt.Columns.Add("mese");
+               
+                
+                dt.Columns.Add("importo", typeof(decimal), null);
+                
+
+
+                string ConString = "User id=" + user + ";Password=" + password + ";Server=" + percorso + ";" + "Database=" + dbname + ";";
+
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
+
+                command.CommandText = "SELECT * FROM sospesi WHERE mese = '" + nomemese + "'";
+
+                connection.Open();
+
+                Reader = command.ExecuteReader();
+
+
+
+                if (Reader.HasRows)
+                {
+
+                    while (Reader.Read())
+                    {
+
+                        DataRow ne = dt.NewRow();
+                        string data = Reader["data"].ToString();
+                        DateTime date = DateTime.ParseExact(data, "yyyy/MM/dd", new CultureInfo("it-IT"));
+                        var date2 = date.ToShortDateString();
+
+
+                        string mese = Reader["mese"].ToString();
+                       
+                        
+                        
+
+
+
+                        ne["data"] = date.ToShortDateString();
+                        ne["mese"] = mese;
+                        
+                       
+                        
+
+                        dt.Rows.Add(ne);
+
+
+                    }
+                    DataSet ds = new DataSet("table");
+                    ds.Tables.Add(dt);
+                   
+                    num_sospesi = ds.Tables["Table1"].Rows.Count;
+                    
+
+                    
+
+
+                }
+                Reader.Close();
+if (num_sospesi > 0) { sospesi_txt.Content = "Ci sono " + num_sospesi.ToString() + " sospesi"; }
+                    else { sospesi_txt.Content = "Non ci sono sospesi"; }
+
+
+            }
+            catch (Exception e)
+            {
+
+                MessageBox.Show("ERRORE!: ", e.ToString());
+
+            }
+        }
+
 
 
         public void Read_Database(string nomemese)

@@ -19,6 +19,7 @@ using System.IO;
 using System.Globalization;
 using IniParser.Model;
 using IniParser;
+using System.Diagnostics;
 
 namespace Gestione_Studio
 {
@@ -41,7 +42,9 @@ namespace Gestione_Studio
         public MainWindow()
         {
             InitializeComponent();
+            
             Verifica_Database();
+            backup_database();
             frame.Source = new Uri("/Pagine/Quadernino.xaml", UriKind.RelativeOrAbsolute); // initialize frame with the "test1" view
                                                                              // qua.Visibility = Visibility.Collapsed;
                                                                              //  frame.Navigate(new System.Uri("/Pagine/Quadernino.xaml", UriKind.RelativeOrAbsolute));
@@ -76,6 +79,61 @@ namespace Gestione_Studio
 
             
 
+        }
+
+
+        private void backup_database()
+        {
+            try
+            {
+                string path = Directory.GetCurrentDirectory();
+
+                Process process = new Process();
+                process.StartInfo.FileName = "cmd.exe";
+                process.StartInfo.Arguments = "/K" + "\"" + path + "\\" + "mysqldump.exe" + "\"" + " --host " + percorso + " -P 3306 --u " + user + " -p" + password + " negozio > bk.dat" + " & exit";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                //* Set ONLY ONE handler here.
+                process.ErrorDataReceived += new DataReceivedEventHandler(OutputHandler);
+                //* Start process
+                process.Start();
+                //* Read one element asynchronously
+                process.BeginErrorReadLine();
+                //* Read the other one synchronously
+                string output = process.StandardOutput.ReadToEnd();
+                //  Console.WriteLine(output);
+                process.WaitForExit();
+
+
+
+            }
+            catch
+            {
+                MessageBox.Show("Backup non eseguito! Riprovare");
+
+            }
+
+
+
+        }
+
+        static void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        {
+            //* Do your stuff with the output (write to console/log/StringBuilder)
+            if (outLine.Data != null)
+            {
+                MessageBox.Show(outLine.Data);
+            }
+
+            else
+            {
+
+
+
+            }
+            // Console.WriteLine(outLine.Data);
         }
 
 
@@ -152,7 +210,10 @@ namespace Gestione_Studio
             ShowHideMenu("sbHideLeftMenu", btnLeftMenuHide, btnLeftMenuShow, pnlLeftMenu);
         }
 
-
-        
+        private void sospesi_btn_Click(object sender, RoutedEventArgs e)
+        {
+            frame.Navigate(new System.Uri("/Pagine/Sospesi.xaml", UriKind.RelativeOrAbsolute));
+            ShowHideMenu("sbHideLeftMenu", btnLeftMenuHide, btnLeftMenuShow, pnlLeftMenu);
+        }
     }
 }

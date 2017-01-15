@@ -150,6 +150,7 @@
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" >
                     <Button x:Name="quadernino_btn" Style="{StaticResource Flat_Button}" Width="150" Height="48"  Content="QUADERNINO" BorderThickness="0" Background="#0d61e8"  FontSize="16" Click="quadernino_btn_Click"/>
                     <Button x:Name="riepilogo_btn" Style="{StaticResource Flat_Button}" Width="150" Height="48"  Content="RIEPILOGO" BorderThickness="0" Background="#0d61e8"  FontSize="16" Click="riepilogo_btn_Click"/>
+                    <Button x:Name="sospesi_btn" Style="{StaticResource Flat_Button}" Width="150" Height="48"  Content="SOSPESI" BorderThickness="0" Background="#0d61e8"  FontSize="16" Click="sospesi_btn_Click"/>
                     <Button x:Name="impostazioni_btn" Style="{StaticResource Flat_Button}" Width="150" Height="48"  Content="IMPOSTAZIONI" BorderThickness="0" Background="#0d61e8"  FontSize="16" Click="impostazioni_btn_Click"/>
                 </StackPanel>
             </Border>

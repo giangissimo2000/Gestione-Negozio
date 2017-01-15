@@ -154,38 +154,29 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Pagine\Aggiungi_Sospseso.xaml.cs">
+      <DependentUpon>Aggiungi_Sospseso.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pagine\Aggiungi.xaml.cs">
       <DependentUpon>Aggiungi.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pagine\Aggiungi_Utente.xaml.cs">
       <DependentUpon>Aggiungi_Utente.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pagine\Cassa_Fiscale.xaml.cs">
-      <DependentUpon>Cassa_Fiscale.xaml</DependentUpon>
+    <Compile Include="Pagine\Modifica_Sospesi.xaml.cs">
+      <DependentUpon>Modifica_Sospesi.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pagine\Cat.xaml.cs">
-      <DependentUpon>Cat.xaml</DependentUpon>
+    <Compile Include="Pagine\Sospesi.xaml.cs">
+      <DependentUpon>Sospesi.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pagine\Dettaglio_Riepilogo.xaml.cs">
       <DependentUpon>Dettaglio_Riepilogo.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pagine\FondoCassaFiscale.xaml.cs">
-      <DependentUpon>FondoCassaFiscale.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pagine\FondoCassaCat.xaml.cs">
-      <DependentUpon>FondoCassaCat.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pagine\Aggiungi_Gruppo.xaml.cs">
       <DependentUpon>Aggiungi_Gruppo.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pagine\Impostazioni.xaml.cs">
       <DependentUpon>Impostazioni.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pagine\Modifica_Fondocassafiscale.xaml.cs">
-      <DependentUpon>Modifica_Fondocassafiscale.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pagine\Modifica_Fondocassacat.xaml.cs">
-      <DependentUpon>Modifica_Fondocassacat.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pagine\Modifica_Fondocassaposta.xaml.cs">
       <DependentUpon>Modifica_Fondocassaposta.xaml</DependentUpon>
@@ -208,6 +199,10 @@
     <Compile Include="Pagine\Riepilogo.xaml.cs">
       <DependentUpon>Riepilogo.xaml</DependentUpon>
     </Compile>
+    <Page Include="Pagine\Aggiungi_Sospseso.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Pagine\Aggiungi_Utente.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -243,11 +238,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pagine\Cassa_Fiscale.xaml">
+    <Page Include="Pagine\Modifica_Sospesi.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pagine\Cat.xaml">
+    <Page Include="Pagine\Sospesi.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -255,25 +250,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pagine\FondoCassaFiscale.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pagine\FondoCassaCat.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Pagine\Impostazioni.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pagine\Modifica_Fondocassafiscale.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pagine\Modifica_Fondocassacat.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pagine\Modifica_Fondocassaposta.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -1,9 +1,10 @@
 ﻿using IniParser;
 using IniParser.Model;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -24,11 +25,14 @@ namespace Gestione_Studio
     /// <summary>
     /// Interaction logic for Modifica.xaml
     /// </summary>
-    public partial class Modifica_Fondocassacat : Window
+    public partial class Modifica_Sospesi : Window
     {
         string id;
         string data3;
         string percorso = "";
+        string user = "";
+        string password = "";
+        string dbname = "";
         string mese;
        
         string descrizione;
@@ -36,7 +40,7 @@ namespace Gestione_Studio
        
         string tipo;
         string utente;
-        public Modifica_Fondocassacat()
+        public Modifica_Sospesi()
         {
             InitializeComponent();
             Verifica_Database();
@@ -52,6 +56,9 @@ namespace Gestione_Studio
                 var parser = new FileIniDataParser();
                 IniData data = parser.ReadFile(path + "\\" + "Config.ini");
                 percorso = data["Generale"]["Percorso"];
+                user = data["Generale"]["User"];
+                password = data["Generale"]["Password"];
+                dbname = data["Generale"]["DatabaseName"];
             }
             catch
             {
@@ -61,25 +68,10 @@ namespace Gestione_Studio
             }
 
 
-            try
-            {
-                if (File.Exists(percorso))
-                {
-                    percorso = percorso.Replace(@"\\", @"\\\");
-                }
-                else
-                {
-                    MessageBox.Show("Impossibile trovare il Database!");
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Impossibile trovare il Database!");
-
-            }
+           
 
         }
-        public void trova_id (string data, string mese,  string descrizione, string importo, string movimento, string utente)
+        public void trova_id (string data, string mese,  string descrizione, string importo,  string utente)
         {
 
             try
@@ -87,15 +79,15 @@ namespace Gestione_Studio
                 
                     
                     string path = Directory.GetCurrentDirectory();
-                    string ConString = "Data Source=" + percorso + ";Version=3;";
+                    string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                    SQLiteConnection connection = new SQLiteConnection(ConString);
-                    SQLiteCommand command = connection.CreateCommand();
-                    SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                    MySqlCommand command = connection.CreateCommand();
+                    MySqlDataReader Reader;
 
                 descrizione = descrizione.Replace("'", "''");
 
-                command.CommandText  = "select id from fondocat where data ='" + data + "' and mese='" + mese + "' and gruppo='USCITA CAT' and descrizione='" + descrizione + "' and importo='" + importo + "' and tipo_mov='" + movimento +  "' and utente='" + utente + "'";
+                command.CommandText  = "select id from sospesi where data ='" + data + "' and mese='" + mese + "' and descrizione='" + descrizione + "' and importo='" + importo +  "' and utente='" + utente + "'";
 
 
                     connection.Open();
@@ -147,33 +139,33 @@ namespace Gestione_Studio
             importo = Application.Current.Properties["importo_mod"].ToString();
             importo_block.Text = Application.Current.Properties["importo_mod"].ToString();
             
-            tipo  = Application.Current.Properties["tipo_mod"].ToString();
+            
             utente = Application.Current.Properties["utente_mod"].ToString();
             utenti_combo.SelectedValue = Application.Current.Properties["utente_mod"].ToString();
             
 
-            trova_id(data3, mese,  descrizione, importo, tipo,utente);
+            trova_id(data3, mese,  descrizione, importo,utente);
 
         }
 
 
 
-        private void aggiorna_database(string data, string mese,  string descrizione, string importo, string movimento,  string utente)
+        private void aggiorna_database(string data, string mese,  string descrizione, string importo,   string utente)
         {
 
             try
             {
                 string path = Directory.GetCurrentDirectory();
 
-                SQLiteConnection modifica = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+                MySqlConnection modifica = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
                 modifica.Open();
                 descrizione = descrizione.Replace("'", "''");
-                string sql = "update fondocat set data ='" + data + "', mese='" + mese + "', gruppo='USCITA CAT', descrizione='" + descrizione + "', importo='" + importo + "', tipo_mov='"  + movimento +  "', utente='" + utente + "'  where id='" + id + "'";
+                string sql = "update sospesi set data ='" + data + "', mese='" + mese + "', descrizione='" + descrizione + "', importo='" + importo +   "', utente='" + utente + "'  where id='" + id + "'";
                 // string sqlh = "update Prodotti set Giacenza ='" + quantitanew + "'  where Codice ='" + codice + "'";
                 //insert into Prodotti (CodiceAAMS,Prezzo_pacchetto,Tipologia) values ( '" + CodiceAAMS + "','" + Prezzo_pacc + "','" + Tipologia + "')";//
 
 
-                SQLiteCommand command = new SQLiteCommand(sql, modifica);
+                MySqlCommand command = new MySqlCommand(sql, modifica);
                 command.ExecuteNonQuery();
                 modifica.Close();
 
@@ -214,11 +206,11 @@ namespace Gestione_Studio
 
                 dt.Columns.Add("utente");
                 string path = Directory.GetCurrentDirectory();
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
 
 
 
@@ -299,7 +291,7 @@ namespace Gestione_Studio
 
 
 
-                            string movimento = "";
+                            
 
                             string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
                             string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s.ToUpper());
@@ -314,12 +306,12 @@ namespace Gestione_Studio
 
                             }*/
 
-                            movimento = "USCITA";
+                            
 
 
 
 
-                            aggiorna_database(data3, mese, descrizione, importo, movimento, utente);
+                            aggiorna_database(data3, mese, descrizione, importo, utente);
                             var myObject = this.Owner as MainWindow;
                             Application.Current.Properties["PassGate"] = mese;
                             // myObject.Read_Database(mese);

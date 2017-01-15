@@ -1,9 +1,10 @@
 ﻿using IniParser;
 using IniParser.Model;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -24,10 +25,13 @@ namespace Gestione_Studio.Pagine
     /// <summary>
     /// Interaction logic for Posta.xaml
     /// </summary>
-    public partial class Cassa_Fiscale : Page
+    public partial class Sospesi : Page
     {
         string percorso = "";
-        public Cassa_Fiscale()
+        string user = "";
+        string password = "";
+        string dbname = "";
+        public Sospesi()
         {
             InitializeComponent();
             Verifica_Database();
@@ -46,6 +50,10 @@ namespace Gestione_Studio.Pagine
                 var parser = new FileIniDataParser();
                 IniData data = parser.ReadFile(path + "\\" + "Config.ini");
                 percorso = data["Generale"]["Percorso"];
+                user = data["Generale"]["User"];
+                password = data["Generale"]["Password"];
+                dbname = data["Generale"]["DatabaseName"];
+
             }
             catch
             {
@@ -55,22 +63,7 @@ namespace Gestione_Studio.Pagine
             }
 
 
-            try
-            {
-                if (File.Exists(percorso))
-                {
-                    percorso = percorso.Replace(@"\\", @"\\\");
-                }
-                else
-                {
-                    MessageBox.Show("Impossibile trovare il Database!");
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Impossibile trovare il Database!");
-
-            }
+            
 
         }
         public void Read_Database(string nomemese)
@@ -87,27 +80,26 @@ namespace Gestione_Studio.Pagine
                 dt.Columns.Add("data");
 
                 dt.Columns.Add("mese");
-                dt.Columns.Add("gruppo");
+                
                 dt.Columns.Add("descrizione");
                 dt.Columns.Add("importo", typeof(decimal), null);
-                dt.Columns.Add("tipo_mov");
-                dt.Columns.Add("banca");
+               
                 dt.Columns.Add("utente");
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
                 if (nomemese != "Anno")
                 {
-                    command.CommandText = "SELECT * FROM quadernino WHERE mese = '" + nomemese + "' and banca='F'";
+                    command.CommandText = "SELECT * FROM sospesi WHERE mese = '" + nomemese + "'";
                 }
 
                 else
                 {
 
-                    command.CommandText = "SELECT * FROM quadernino WHERE  banca='F'";
+                    command.CommandText = "SELECT * FROM sospesi ";
 
                 }
                 connection.Open();
@@ -129,24 +121,24 @@ namespace Gestione_Studio.Pagine
 
 
                         string mese = Reader["mese"].ToString();
-                        string gruppo = Reader["gruppo"].ToString();
+                       
                         string descrizione = Reader["descrizione"].ToString();
                         string importo1 = Reader["importo"].ToString();
                         decimal imp = Convert.ToDecimal(importo1);
-                        string importo = Convert.ToString(imp * (-1));
-                        string tipo_mov = Reader["tipo_mov"].ToString();
-                        string banca = Reader["banca"].ToString();
+                        string importo = Convert.ToString(imp);
+                        
+                        
                         string utente = Reader["utente"].ToString();
 
 
 
                         ne["data"] = date.ToShortDateString();
                         ne["mese"] = mese;
-                        ne["gruppo"] = gruppo;
+                        
                         ne["descrizione"] = descrizione;
                         ne["importo"] = importo;
-                        ne["tipo_mov"] = tipo_mov;
-                        ne["banca"] = banca;
+                        
+                        
                         ne["utente"] = utente;
 
                         dt.Rows.Add(ne);
@@ -161,102 +153,9 @@ namespace Gestione_Studio.Pagine
                 Reader.Close();
 
 
-
-
-
-
-
-           }
-            catch (Exception e)
-            {
-
-                MessageBox.Show("ERRORE!: ", e.ToString());
-
-            }
-            DataTable ds = new DataTable();
-            try
-            {
-                string path = Directory.GetCurrentDirectory();
-                Console.WriteLine(path);
-                ;
-
-                ds.Columns.Add("data");
-
-                ds.Columns.Add("mese");
-                ds.Columns.Add("gruppo");
-                ds.Columns.Add("descrizione");
-                ds.Columns.Add("importo", typeof(decimal), null);
-                ds.Columns.Add("tipo_mov");
-                ds.Columns.Add("banca");               
-                ds.Columns.Add("utente");
-
-                string ConString = "Data Source=" + percorso + ";Version=3;";
-
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
-
-                if (nomemese != "Anno")
-                {
-                    command.CommandText = "SELECT * FROM fondocassafiscale WHERE mese = '" + nomemese + "' and gruppo='FONDO'";
-                }
-
-
-                else
-                {
-                    command.CommandText = "SELECT * FROM fondocassafiscale WHERE  gruppo='FONDO'";
-
-                }
-                connection.Open();
-
-                Reader = command.ExecuteReader();
-
-
-
-                if (Reader.HasRows)
-                {
-
-                    while (Reader.Read())
-                    {
-
-                        DataRow ne = ds.NewRow();
-                        string data = Reader["data"].ToString();
-                        DateTime date = DateTime.ParseExact(data, "yyyy/MM/dd", new CultureInfo("it-IT"));
-                        var date2 = date.ToShortDateString();
-
-
-                        string mese = Reader["mese"].ToString();
-                        string gruppo = Reader["gruppo"].ToString();
-                        string descrizione = Reader["descrizione"].ToString();
-                        string importo = Reader["importo"].ToString();
-                        string tipo_mov = Reader["tipo_mov"].ToString();
-                      
-                        string utente = Reader["utente"].ToString();
-
-
-
-                        ne["data"] = date.ToShortDateString();
-                        ne["mese"] = mese;
-                        ne["gruppo"] = gruppo;
-                        ne["descrizione"] = descrizione;
-                        ne["importo"] = importo;
-                        ne["tipo_mov"] = tipo_mov;
-                       
-                        ne["utente"] = utente;
-
-                        ds.Rows.Add(ne);
-
-
-                    }
-                    DataSet df = new DataSet("table");
-                    df.Tables.Add(ds);
-                    
-                }
-                Reader.Close();
-
                 DataTable dtAll = new DataTable();
                 dtAll = dt.Copy();
-                dtAll.Merge(ds, true);
+                
 
                 cat_table.ItemsSource = dtAll.DefaultView;
 
@@ -270,6 +169,15 @@ namespace Gestione_Studio.Pagine
                 MessageBox.Show("ERRORE!: ", e.ToString());
 
             }
+            
+
+                
+
+
+
+
+            
+            
         }
 
         private void comboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -288,30 +196,15 @@ namespace Gestione_Studio.Pagine
             decimal uscit = 0;
             for (int i = 0; i < cat_table.Items.Count; ++i)
             {
-                string bb = (cat_table.Items[i] as DataRowView).Row.ItemArray[6].ToString();
-                if (bb == "F")
-                {
-                    myCollection.Add(((cat_table.Items[i] as DataRowView).Row.ItemArray[4].ToString()));
-                }
-
-                string group = (cat_table.Items[i] as DataRowView).Row.ItemArray[2].ToString();
-                if (group == "FONDO")
-                {
-                    myCollection2.Add(((cat_table.Items[i] as DataRowView).Row.ItemArray[4].ToString()));
-                }
+                
+                    myCollection.Add(((cat_table.Items[i] as DataRowView).Row.ItemArray[3].ToString()));
+                
             }
 
             var myarray2 = myCollection.ToArray();
-            var myarray = myCollection2.ToArray();
+            
 
-            for (int i = 0; i < myarray.Length; ++i)
-            {
-
-                
-                
-                    entrat += Convert.ToDecimal(myarray[i]);
-                
-            }
+            
             for (int i = 0; i < myarray2.Length; ++i)
             {
 
@@ -325,8 +218,8 @@ namespace Gestione_Studio.Pagine
             }
 
             in_total.Content = uscit.ToString("N", new CultureInfo("is-IS")) + " €";
-            out_total.Content = entrat.ToString("N", new CultureInfo("is-IS")) + " €";
-            total.Content = ((Convert.ToDecimal(uscit) - Convert.ToDecimal(entrat)).ToString("N", new CultureInfo("is-IS")) + " €");
+          //  out_total.Content = entrat.ToString("N", new CultureInfo("is-IS")) + " €";
+          //  total.Content = ((Convert.ToDecimal(uscit) - Convert.ToDecimal(entrat)).ToString("N", new CultureInfo("is-IS")) + " €");
 
                 //.ToString("N", new CultureInfo("is-IS")) + " €";
 
@@ -337,11 +230,11 @@ namespace Gestione_Studio.Pagine
         private void Nuovo_fondocassa_Click(object sender, RoutedEventArgs e)
         {
             string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
-            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s);
+            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s.ToUpper());
             comboBox.SelectedValue = mese;
 
-            FondoCassaPosta FondoCassaPosta = new FondoCassaPosta();
-            FondoCassaPosta.ShowDialog();
+            Aggiungi_Sospeso Aggiungi_Sospeso = new Aggiungi_Sospeso();
+            Aggiungi_Sospeso.ShowDialog();
             string vv = Application.Current.Properties["PassGate"].ToString();
             Read_Database(vv);
             totale();
@@ -351,9 +244,8 @@ namespace Gestione_Studio.Pagine
         {
             string mese = comboBox.SelectedValue.ToString();
             DataRowView drv1 = (DataRowView)cat_table.SelectedItem;
-            string data2 = drv1["gruppo"].ToString();
-            if (data2 == "FONDO")
-            {
+            
+            
                 if (cat_table.SelectedIndex != -1)
                 {
 
@@ -378,13 +270,13 @@ namespace Gestione_Studio.Pagine
                         drv.Row.Delete();
                         string path = Directory.GetCurrentDirectory();
 
-                        SQLiteConnection cancella = new SQLiteConnection("Data Source=" + percorso + ";Version=3;");
+                        MySqlConnection cancella = new MySqlConnection("SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";");
                         cancella.Open();
-                        string sql = "delete from fondocassafiscale where data='" + data3 + "' and mese='" + mese_del + "' and descrizione='" + descrizione_del + "' and importo='" + importo_del + "'";
+                        string sql = "delete from sospesi where data='" + data3 + "' and mese='" + mese_del + "' and descrizione='" + descrizione_del + "' and importo='" + importo_del + "'";
 
 
 
-                        SQLiteCommand command = new SQLiteCommand(sql, cancella);
+                        MySqlCommand command = new MySqlCommand(sql, cancella);
                         command.ExecuteNonQuery();
                         cancella.Close();
 
@@ -399,8 +291,7 @@ namespace Gestione_Studio.Pagine
 
                 }
                 else MessageBox.Show("Seleziona una riga da Eliminare!");
-            }
-            else MessageBox.Show("Puoi eliminare solo le righe FONDO!");
+            
         }
 
         private void Modifica_Voce_Click(object sender, RoutedEventArgs e)
@@ -411,9 +302,8 @@ namespace Gestione_Studio.Pagine
 
                 string mese = comboBox.SelectedValue.ToString();
                 DataRowView drv1 = (DataRowView)cat_table.SelectedItem;
-                string data2 = drv1["gruppo"].ToString();
-                if (data2 == "FONDO")
-                {
+                
+                
 
 
 
@@ -429,18 +319,17 @@ namespace Gestione_Studio.Pagine
                     descrizione_mod = rowview.Row["descrizione"].ToString();
                     Application.Current.Properties["descrizione_mod"] = descrizione_mod;
                     Application.Current.Properties["importo_mod"] = rowview.Row["importo"].ToString();
-                    Application.Current.Properties["tipo_mod"] = rowview.Row["tipo_mov"].ToString();
+                    
                     Application.Current.Properties["utente_mod"] = rowview.Row["utente"].ToString();
-                    Modifica_Fondocassafiscale modifica_fondocassafiscale = new Modifica_Fondocassafiscale();
-                    modifica_fondocassafiscale.ShowDialog();
+                    Modifica_Sospesi Modifica_Sospesi = new Modifica_Sospesi();
+                Modifica_Sospesi.ShowDialog();
 
                     //  string vv = Application.Current.Properties["PassGate"].ToString();
                     Read_Database(mese);
                     totale();
-                }
+                
 
-                else
-                { MessageBox.Show("Puoi modificare solo le righe FONDO!"); }
+                
 
             }
             catch
@@ -457,12 +346,9 @@ namespace Gestione_Studio.Pagine
             if (item != null)
             {
                 DataRow row = item.Row;
+                e.Row.Foreground = new SolidColorBrush(Colors.Red);
 
-
-                if( row["gruppo"].ToString() == "FONDO")
-                { e.Row.Foreground = new SolidColorBrush(Colors.Green); }
-                else
-                { e.Row.Foreground = new SolidColorBrush(Colors.Black); }
+                
 
                 
 
@@ -477,11 +363,11 @@ namespace Gestione_Studio.Pagine
         private void Nuovo_fondocat_Click(object sender, RoutedEventArgs e)
         {
             string s = DateTime.Now.ToString("MMMM", new CultureInfo("it-IT"));
-            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s.ToUpper());
-            comboBox.SelectedValue = mese;
+            string mese = new CultureInfo("it-IT").TextInfo.ToTitleCase(s);
+            comboBox.SelectedValue = mese.ToUpper();
 
-            FondoCassaFiscale FondoCassaFiscale = new FondoCassaFiscale();
-            FondoCassaFiscale.ShowDialog();
+            Aggiungi_Sospeso Aggiungi_Sospseso = new Aggiungi_Sospeso();
+            Aggiungi_Sospseso.ShowDialog();
             string vv = Application.Current.Properties["PassGate"].ToString();
             Read_Database(vv);
             totale();

@@ -1,9 +1,10 @@
 ﻿using IniParser;
 using IniParser.Model;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
+
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,9 @@ namespace Gestione_Studio
     {
 
         string percorso = "";
+        string user = "";
+        string password = "";
+        string dbname = "";
         public Dettaglio_Riepilogo()
         {
             InitializeComponent();
@@ -42,6 +46,9 @@ namespace Gestione_Studio
                 var parser = new FileIniDataParser();
                 IniData data = parser.ReadFile(path + "\\" + "Config.ini");
                 percorso = data["Generale"]["Percorso"];
+                user = data["Generale"]["User"];
+                password = data["Generale"]["Password"];
+                dbname = data["Generale"]["DatabaseName"];
             }
             catch
             {
@@ -51,22 +58,7 @@ namespace Gestione_Studio
             }
 
 
-            try
-            {
-                if (File.Exists(percorso))
-                {
-                    percorso = percorso.Replace(@"\\", @"\\\");
-                }
-                else
-                {
-                    MessageBox.Show("Impossibile trovare il Database!");
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Impossibile trovare il Database!");
-
-            }
+            
 
         }
 
@@ -86,11 +78,11 @@ namespace Gestione_Studio
                 dt.Columns.Add("utente");
 
 
-                string ConString = "Data Source=" + percorso + ";Version=3;";
+                string ConString = "SERVER=" + percorso + ";" + "DATABASE=" + dbname + ";" + "UID=" + user + ";" + "PASSWORD=" + password + ";";
 
-                SQLiteConnection connection = new SQLiteConnection(ConString);
-                SQLiteCommand command = connection.CreateCommand();
-                SQLiteDataReader Reader;
+                MySqlConnection connection = new MySqlConnection(ConString);
+                MySqlCommand command = connection.CreateCommand();
+                MySqlDataReader Reader;
 
                 command.CommandText = "SELECT data,descrizione,importo,utente FROM quadernino WHERE mese = '" + colonna + "' and  gruppo = '" +riga + "'";
 
